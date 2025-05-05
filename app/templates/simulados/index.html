@@ -1,0 +1,237 @@
+{% extends "layout.html" %}
+
+{% block title %}Simulados - Plataforma Launcher{% endblock %}
+
+{% block styles %}
+
+<style> .hero-section { background: linear-gradient(to bottom right, rgba(0, 123, 255, 0.2), rgba(0, 180, 216, 0.2)); border-radius: 10px; padding: 2rem; margin-bottom: 2rem; } .hero-title { font-size: 2.4rem; font-weight: 700; margin-bottom: 1rem; } .hero-subtitle { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; } .next-simulator-btn { font-size: 1.1rem; padding: 0.8rem 2rem; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; } .next-simulator-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 123, 255, 0.3); } .stat-card { transition: transform 0.3s; height: 100%; } .stat-card:hover { transform: translateY(-5px); } .area-progress { height: 10px; border-radius: 5px; } .area-label { display: flex; justify-content: space-between; margin-bottom: 5px; } .simulator-card { transition: all 0.3s ease; border-radius: 8px; overflow: hidden; } .simulator-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); } .simulator-badge { position: absolute; top: 10px; right: 10px; z-index: 2; } .chart-container { height: 250px; position: relative; } .tri-info-card { height: 100%; border-left: 4px solid #0dcaf0; } .tooltip-icon { cursor: pointer; font-size: 0.9rem; opacity: 0.7; } .tooltip-icon:hover { opacity: 1; } </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="simulados-container"> <!-- Seção Hero --> <div class="hero-section"> <div class="row align-items-center"> <div class="col-lg-8"> <h1 class="hero-title">Simulados Inteligentes com Correção TRI</h1> <p class="hero-subtitle">Prepare-se de verdade com a experiência mais próxima do ENEM.</p> <a href="{{ url_for('simulados.iniciar_simulado', simulado_id=simulados_pendentes[0].id) if simulados_pendentes else '#' }}" class="btn btn-primary btn-lg next-simulator-btn"> <i class="bi bi-play-fill me-2"></i> Fazer meu próximo Simulado </a> </div> <div class="col-lg-4 d-none d-lg-block"> <img src="{{ url_for('static', filename='images/simulado-hero.svg') }}" alt="Simulados" class="img-fluid"> </div> </div> </div>
+<!-- Seção de Desempenho -->
+<h2 class="mb-4">Seu Desempenho</h2>
+<div class="row mb-5">
+    <!-- Acertos por Área -->
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Acertos por Área</h5>
+                <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" 
+                      title="Percentual de acertos em cada área de conhecimento nos simulados concluídos">
+                    <i class="bi bi-info-circle"></i>
+                </span>
+            </div>
+            <div class="card-body">
+                {% for area, percentual in desempenho_areas.items() %}
+                <div class="mb-3">
+                    <div class="area-label">
+                        <span>{{ area }}</span>
+                        <span>{{ percentual }}%</span>
+                    </div>
+                    <div class="progress area-progress">
+                        <div class="progress-bar progress-bar-{{ area|lower }}" role="progressbar" 
+                             style="width: {{ percentual }}%; background: {{ 'rgba(0, 180, 216, 0.9)' if area == 'Linguagens' else ('rgba(255, 193, 7, 0.9)' if area == 'Humanas' else ('rgba(25, 135, 84, 0.9)' if area == 'Natureza' else 'rgba(220, 53, 69, 0.9)')) }};" 
+                             aria-valuenow="{{ percentual }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Evolução TRI -->
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Evolução TRI <small class="text-muted">(últimos simulados)</small></h5>
+                <span class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" 
+                      title="Evolução da sua nota TRI nos últimos simulados realizados">
+                    <i class="bi bi-info-circle"></i>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartTRI"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- O que é TRI? -->
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark tri-info-card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">O que é TRI?</h5>
+            </div>
+            <div class="card-body">
+                <p>A <strong>Teoria de Resposta ao Item (TRI)</strong> é um método estatístico usado pelo ENEM para calcular a nota dos candidatos de forma mais precisa e justa.</p>
+                <p>Diferente da correção tradicional, a TRI considera:</p>
+                <ul>
+                    <li>A dificuldade de cada questão</li>
+                    <li>O poder de discriminação da questão</li>
+                    <li>A coerência no padrão de respostas</li>
+                </ul>
+                <p class="mb-0 text-info"><small>A Plataforma Launcher utiliza um algoritmo avançado de TRI para oferecer uma experiência similar ao ENEM.</small></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Agenda de Simulados -->
+<h2 class="mb-4">Agenda de Simulados</h2>
+{% if simulados_pendentes %}
+    <div class="row mb-5">
+        {% for simulado in simulados_pendentes %}
+        <div class="col-lg-6 mb-4">
+            <div class="card bg-dark simulator-card">
+                <div class="card-body">
+                    <span class="simulator-badge badge bg-secondary">Pendente</span>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title">{{ simulado.titulo }}</h5>
+                            <div class="d-flex flex-wrap align-items-center">
+                                <div class="me-4 mb-2">
+                                    <i class="bi bi-clock me-2"></i>
+                                    <span>Tempo: {{ simulado.duracao_minutos // 60 }}h{{ simulado.duracao_minutos % 60 }}min</span>
+                                </div>
+                                
+                                {% if simulado.data_agendada %}
+                                <div class="mb-2">
+                                    <i class="bi bi-calendar me-2"></i>
+                                    <span>Agendado: {{ simulado.data_agendada.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-info">{{ simulado.areas }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <a href="{{ url_for('simulados.iniciar_simulado', simulado_id=simulado.id) }}" class="btn btn-primary">
+                                <i class="bi bi-play-fill me-1"></i> Fazer Simulado
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card bg-dark mb-5">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-calendar-x fs-1 mb-3 text-muted"></i>
+            <h4 class="mb-3">Não há simulados pendentes no momento</h4>
+            <p class="mb-3">Que tal agendar um novo simulado para continuar sua preparação?</p>
+            <a href="#" class="btn btn-primary">Agendar Novo Simulado</a>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Histórico de Simulados -->
+<h2 class="mb-4">Histórico de Simulados</h2>
+{% if simulados_concluidos %}
+    <div class="row mb-5">
+        {% for simulado in simulados_concluidos %}
+        <div class="col-lg-6 mb-4">
+            <div class="card bg-dark simulator-card">
+                <div class="card-body">
+                    <span class="simulator-badge badge bg-success">Concluído</span>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title">{{ simulado.titulo }}</h5>
+                            <div class="d-flex flex-wrap align-items-center mb-2">
+                                <div class="me-3 mb-2">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    <span>{{ simulado.data_realizado.strftime('%d/%m/%Y') }}</span>
+                                </div>
+                                
+                                {% if simulado.tempo_realizado %}
+                                <div class="mb-2">
+                                    <i class="bi bi-stopwatch me-1"></i>
+                                    <span>{{ simulado.tempo_realizado }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-info me-2">{{ simulado.areas }}</span>
+                                <span class="badge bg-primary rounded-pill">TRI: {{ simulado.nota_tri|int }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <a href="{{ url_for('simulados.resultado', simulado_id=simulado.id) }}" class="btn btn-outline-info">
+                                <i class="bi bi-eye me-1"></i> Ver Gabarito
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card bg-dark mb-5">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-journal-text fs-1 mb-3 text-muted"></i>
+            <h4 class="mb-3">Você ainda não concluiu nenhum simulado</h4>
+            <p class="mb-3">Complete seu primeiro simulado para visualizar seu histórico e análises de desempenho!</p>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Ações Adicionais -->
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark stat-card">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-graph-up fs-1 text-primary"></i>
+                </div>
+                <h5 class="mb-3">Análises Avançadas</h5>
+                <p class="text-muted mb-4">Visualize análises detalhadas do seu desempenho nos simulados.</p>
+                <a href="{{ url_for('analise.index') }}" class="btn btn-outline-primary">
+                    Ver Análises
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark stat-card">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-book fs-1 text-success"></i>
+                </div>
+                <h5 class="mb-3">Plano de Estudos</h5>
+                <p class="text-muted mb-4">Obtenha um plano de estudos personalizado baseado no seu desempenho.</p>
+                <a href="{{ url_for('plano_estudo.index') }}" class="btn btn-outline-success">
+                    Ver Plano
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card bg-dark stat-card">
+            <div class="card-body text-center p-4">
+                <div class="mb-3">
+                    <i class="bi bi-people fs-1 text-warning"></i>
+                </div>
+                <h5 class="mb-3">Help Zone</h5>
+                <p class="text-muted mb-4">Tire suas dúvidas sobre questões com outros estudantes.</p>
+                <a href="{{ url_for('helpzone.index') }}" class="btn btn-outline-warning">
+                    Acessar Help Zone
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</div> {% endblock %}
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script> document.addEventListener('DOMContentLoaded', function() { // Inicializar tooltips do Bootstrap var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')) var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl) }); // Gráfico de evolução TRI const ctx = document.getElementById('chartTRI').getContext('2d'); const chartTRI = new Chart(ctx, { type: 'line', data: { labels: {{ datas_grafico|tojson }}, datasets: [{ label: 'Nota TRI', data: {{ notas_grafico|tojson }}, backgroundColor: 'rgba(0, 180, 216, 0.2)', borderColor: 'rgba(0, 180, 216, 1)', borderWidth: 2, tension: 0.4, pointBackgroundColor: 'rgba(0, 180, 216, 1)', pointBorderColor: '#fff', pointRadius: 5, pointHoverRadius: 8 }] }, options: { scales: { y: { beginAtZero: false, min: 0, max: 1000, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } }, x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return `TRI: ${context.raw}`; } } } }, maintainAspectRatio: false, responsive: true } }); // Adicionar animação nos cards const cards = document.querySelectorAll('.simulator-card, .stat-card'); cards.forEach(card => { card.addEventListener('mouseenter', function() { this.style.transform = 'translateY(-5px)'; this.style.boxShadow = '0 10px 20px rgba(0, 123, 255, 0.2)'; }); card.addEventListener('mouseleave', function() { this.style.transform = ''; this.style.boxShadow = ''; }); }); }); </script>
+{% endblock %}
+

@@ -1,0 +1,109 @@
+{% extends "layout.html" %}
+
+{% block title %}Simulado - Questão {{ questao.numero }} - Plataforma Launcher{% endblock %}
+
+{% block styles %}
+
+<style> .questoes-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; } .alternativa-item { padding: 10px; border-radius: 5px; transition: background-color 0.2s; } .alternativa-item:hover { background-color: rgba(255, 255, 255, 0.05); } .alternativa-letra { font-weight: bold; min-width: 20px; } /* Estilo semelhante ao mockup do PDF */ .card { border-radius: 10px; overflow: hidden; } #timer { font-size: 1.2rem; font-weight: bold; font-family: monospace; } </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="simulado-questao"> <div class="d-flex justify-content-between align-items-center mb-4"> <h1>{{ simulado.titulo }}</h1> <div class="d-flex align-items-center"> <span class="text-light me-3" id="timer">00:00:00</span> <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalFinalizar">Finalizar</button> </div> </div>
+<!-- Barra de Progresso -->
+<div class="progress mb-4" style="height: 8px;">
+    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ progresso }}%;" 
+         aria-valuenow="{{ progresso }}" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+
+<div class="row">
+    <!-- Menu de Questões -->
+    <div class="col-md-3">
+        <div class="card bg-dark mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">QUESTÕES</h5>
+            </div>
+            <div class="card-body">
+                <div class="questoes-grid">
+                    {% for q in todas_questoes %}
+                        <a href="{{ url_for('simulados.questao', simulado_id=simulado.id, questao_numero=q.numero) }}" 
+                           class="btn btn-sm {{ 'btn-primary' if q.numero == questao.numero else 'btn-outline-secondary' }} {{ 'text-success' if q.resposta_usuario else '' }} me-2 mb-2"
+                           style="min-width: 40px; text-align: center;">
+                            {{ q.numero }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Questão Principal -->
+    <div class="col-md-9">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0">QUESTÃO {{ questao.numero }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="questao-texto mb-4">
+                    {{ questao.texto|safe }}
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="timestamp" id="timestamp" value="">
+                    <div class="alternativas">
+                        {% for alt in questao.alternativas %}
+                        <div class="form-check mb-3 alternativa-item">
+                            <input class="form-check-input" type="radio" name="resposta" 
+                                   id="alt-{{ alt.letra }}" value="{{ alt.letra }}"
+                                   {{ 'checked' if questao.resposta_usuario == alt.letra else '' }}>
+                            <label class="form-check-label d-flex" for="alt-{{ alt.letra }}">
+                                <span class="alternativa-letra me-2">{{ alt.letra }}</span>
+                                <span class="alternativa-texto">{{ alt.texto|safe }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        {% set prev_questao = None %}
+                        {% set next_questao = None %}
+                        
+                        {# Encontrar a questão anterior de forma alternativa #}
+                        {% for q in todas_questoes %}
+                            {% if q.numero < questao.numero %}
+                                {% set prev_questao = q %}
+                            {% endif %}
+                            {% if q.numero > questao.numero and not next_questao %}
+                                {% set next_questao = q %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if prev_questao %}
+                            <a href="{{ url_for('simulados.questao', simulado_id=simulado.id, questao_numero=prev_questao.numero) }}" class="btn btn-outline-light">
+                                <i class="bi bi-arrow-left"></i> Anterior
+                            </a>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-light" disabled>
+                                <i class="bi bi-arrow-left"></i> Anterior
+                            </button>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn btn-primary">
+                            {% if next_questao %}
+                                Próximo <i class="bi bi-arrow-right"></i>
+                            {% else %}
+                                Finalizar Simulado
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div> <!-- Modal Finalizar --> <div class="modal fade" id="modalFinalizar" tabindex="-1" aria-labelledby="modalFinalizarLabel" aria-hidden="true"> <div class="modal-dialog modal-dialog-centered"> <div class="modal-content bg-dark text-light"> <div class="modal-header"> <h5 class="modal-title" id="modalFinalizarLabel">Finalizar Simulado</h5> <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> </div> <div class="modal-body"> <p>Tem certeza que deseja finalizar o simulado?</p> <p class="text-warning">Atenção: Questões não respondidas serão consideradas erradas para o cálculo da sua nota.</p> </div> <div class="modal-footer"> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button> <a href="{{ url_for('simulados.finalizar', simulado_id=simulado.id) }}" class="btn btn-danger">Finalizar Agora</a> </div> </div> </div> </div> {% endblock %}
+{% block scripts %}
+
+<script> // Timer do simulado document.addEventListener('DOMContentLoaded', function() { // Pegar o tempo inicial a partir de um atributo de dados let startTime = new Date("{{ simulado.data_realizado.isoformat() }}"); let timerElement = document.getElementById('timer'); function updateTimer() { let now = new Date(); let diff = Math.floor((now - startTime) / 1000); let hours = Math.floor(diff / 3600); let minutes = Math.floor((diff % 3600) / 60); let seconds = diff % 60; timerElement.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0'); } // Atualizar a cada segundo updateTimer(); setInterval(updateTimer, 1000); // Registrar o timestamp quando o formulário for enviado document.querySelector('form').addEventListener('submit', function() { document.getElementById('timestamp').value = Math.floor(Date.now() / 1000); }); // Adicionar animação às alternativas const alternativas = document.querySelectorAll('input[name="resposta"]'); alternativas.forEach(function(radio) { radio.addEventListener('change', function() { // Destacar visualmente a seleção document.querySelectorAll('.alternativa-item').forEach(function(item) { item.classList.remove('bg-primary', 'bg-opacity-25'); }); this.closest('.alternativa-item').classList.add('bg-primary', 'bg-opacity-25'); }); }); }); </script>
+{% endblock %}
+

@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block title %}Meu Progresso - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="progresso">
+    <h1 class="mb-2">Meu Progresso</h1>
+    <p class="lead mb-5">Estude com inteligência: acompanhe sua evolução e veja, com dados, como potencializar seus resultados.</p>
+    
+    <!-- Resumo de XP -->
+    <div class="card bg-dark text-center mb-5">
+        <div class="card-body py-4">
+            <img src="{{ url_for('static', filename='images/icons/xp-badge.svg') }}" alt="XP" width="64" class="mb-3">
+            <h2 class="display-4 mb-2">{{ xp_total }}</h2>
+            <p class="text-muted">XP acumulado</p>
+        </div>
+    </div>
+    
+    <!-- Progresso por Área -->
+    <h2 class="mb-4">Progresso por Área</h2>
+    <div class="row mb-5">
+        {% for area, dados in progresso_areas.items() %}
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">{{ area }}</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Exercícios concluídos:</span>
+                        <span>{{ dados.exercicios_feitos }} de {{ dados.total_exercicios }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ dados.percentual }}%;" 
+                             aria-valuenow="{{ dados.percentual }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted">
+                        <small>0%</small>
+                        <small>{{ dados.percentual }}% concluído</small>
+                        <small>100%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Estatísticas de Tempo -->
+    <h2 class="mb-4">Tempo de Estudo</h2>
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark text-center h-100">
+                <div class="card-body py-4">
+                    <h5 class="text-muted mb-3">Hoje</h5>
+                    <h3 class="display-5 mb-0">{{ (estatisticas_tempo.hoje // 60)|int }}h{{ (estatisticas_tempo.hoje % 60)|int }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark text-center h-100">
+                <div class="card-body py-4">
+                    <h5 class="text-muted mb-3">Esta Semana</h5>
+                    <h3 class="display-5 mb-0">{{ (estatisticas_tempo.semana // 60)|int }}h{{ (estatisticas_tempo.semana % 60)|int }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark text-center h-100">
+                <div class="card-body py-4">
+                    <h5 class="text-muted mb-3">Este Mês</h5>
+                    <h3 class="display-5 mb-0">{{ (estatisticas_tempo.mes // 60)|int }}h{{ (estatisticas_tempo.mes % 60)|int }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráfico de Evolução -->
+    <h2 class="mb-4">Evolução Semanal</h2>
+    <div class="card bg-dark mb-5">
+        <div class="card-body">
+            <canvas id="graficoEvolucao" width="100%" height="300"></canvas>
+        </div>
+    </div>
+    
+    <!-- Últimos Simulados -->
+    <h2 class="mb-4">Últimos Simulados</h2>
+    <div class="table-responsive mb-5">
+        <table class="table table-dark table-hover">
+            <thead>
+                <tr>
+                    <th>Simulado</th>
+                    <th>Data</th>
+                    <th>Tempo</th>
+                    <th>Nota TRI</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if simulados %}
+                    {% for simulado in simulados %}
+                    <tr>
+                        <td>{{ simulado.titulo }}</td>
+                        <td>{{ simulado.data_realizado.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ simulado.tempo_realizado }}</td>
+                        <td>
+                            <span class="badge bg-primary rounded-pill px-3 py-2">{{ simulado.nota_tri|int }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('simulados.resultado', simulado_id=simulado.id) }}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i> Ver Gabarito
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <p class="mb-3">Você ainda não completou nenhum simulado.</p>
+                            <a href="{{ url_for('simulados.index') }}" class="btn btn-primary">
+                                Explorar Simulados
+                            </a>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de evolução semanal
+    const ctx = document.getElementById('graficoEvolucao').getContext('2d');
+    const graficoEvolucao = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ progresso_semanal.datas|tojson }},
+            datasets: [{
+                label: 'Pontos por dia',
+                data: {{ progresso_semanal.valores|tojson }},
+                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                pointBorderColor: '#fff',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+
+{% block title %}Shop - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="shop">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-2">Troque seu esforço por prêmios de verdade</h1>
+            <p class="lead">Troque seus XP por recompensas físicas exclusivas e celebre seu progresso!</p>
+        </div>
+        <div class="xp-badge d-flex align-items-center p-3 bg-warning rounded-pill">
+            <img src="{{ url_for('static', filename='images/icons/xp-icon.svg') }}" alt="XP" class="me-2" width="24">
+            <span class="fw-bold">{{ xp_atual }} XP</span>
+        </div>
+    </div>
+    
+    <!-- Card de informação -->
+    <div class="card bg-primary bg-opacity-25 text-light mb-5">
+        <div class="card-body text-center py-4">
+            <h4 class="card-title mb-3">🎁 Conquiste e Resgate</h4>
+            <p class="card-text mb-0">
+                Ganhe XP participando de simulados, estudando pelos módulos, resolvendo questões no app, 
+                treinando redação — e muito mais. Tudo o que você faz na Plataforma Launcher gera XP!
+            </p>
+            <p class="card-text">
+                Quando acumular XP suficiente, escolha sua recompensa aqui, os prêmios são enviados 
+                diretamente para a sua casa.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <!-- Placeholder para filtros futuros -->
+        </div>
+        <div>
+            <select class="form-select bg-dark text-light border-secondary" 
+                    onchange="window.location.href='{{ url_for('shop.index') }}?ordenar=' + this.value">
+                <option value="todos" {% if ordenar == 'todos' %}selected{% endif %}>Todos os itens</option>
+                <option value="menor_preco" {% if ordenar == 'menor_preco' %}selected{% endif %}>Menor preço</option>
+                <option value="maior_preco" {% if ordenar == 'maior_preco' %}selected{% endif %}>Maior preço</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Produtos -->
+    <div class="row">
+        {% for produto in produtos %}
+        <div class="col-md-3 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-img-container position-relative">
+                    <img src="{{ url_for('static', filename='images/produtos/' ~ produto.imagem) }}" 
+                         class="card-img-top" alt="{{ produto.nome }}">
+                    <div class="card-xp-badge position-absolute top-0 end-0 bg-warning text-dark fw-bold p-2 m-2 rounded-pill">
+                        {{ produto.preco_xp }} XP
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ produto.nome }}</h5>
+                    <p class="card-text flex-grow-1">{{ produto.descricao }}</p>
+                    
+                    <div class="mt-auto">
+                        {% if current_user.is_authenticated and current_user.xp_total >= produto.preco_xp %}
+                            <a href="{{ url_for('shop.resgatar', produto_id=produto.id) }}" class="btn btn-primary w-100">Resgatar</a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary w-100" disabled>
+                                {% if current_user.is_authenticated %}
+                                    Faltam {{ produto.preco_xp - current_user.xp_total }} XP
+                                {% else %}
+                                    Faça login para resgatar
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

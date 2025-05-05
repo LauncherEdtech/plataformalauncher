@@ -1,0 +1,256 @@
+{% extends "layout.html" %}
+
+{% block title %}Análise de Desempenho - Plataforma Launcher{% endblock %}
+
+{% block styles %}
+
+<style> .dashboard-card { transition: transform 0.3s; height: 100%; } .dashboard-card:hover { transform: translateY(-5px); } .recommendation-card { border-left: 4px solid #007bff; } .stat-value { font-size: 2rem; font-weight: bold; } .progress-thin { height: 8px; } .chart-container { height: 300px; } </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="analise-container"> <div class="d-flex justify-content-between align-items-center mb-4"> <h1>Análise de Desempenho</h1> <div> <a href="{{ url_for('simulados.index') }}" class="btn btn-outline-light"> <i class="bi bi-arrow-left"></i> Voltar para Simulados </a> </div> </div>
+<!-- Recomendações Personalizadas -->
+{% if recomendacoes %}
+<div class="card bg-dark mb-5">
+    <div class="card-header">
+        <h4 class="mb-0"><i class="bi bi-lightbulb"></i> Recomendações para Melhorar</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for rec in recomendacoes %}
+            <div class="col-md-4 mb-3">
+                <div class="card bg-dark recommendation-card">
+                    <div class="card-body">
+                        <p class="mb-0">{{ rec }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Métricas Gerais -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-dark dashboard-card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-journals fs-1 text-primary"></i>
+                </div>
+                <h5 class="text-muted">Total de Simulados</h5>
+                <div class="stat-value">{{ simulados|length }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-dark dashboard-card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-graph-up-arrow fs-1 text-success"></i>
+                </div>
+                <h5 class="text-muted">Média TRI</h5>
+                <div class="stat-value">{{ (notas|map('float')|sum / notas|length)|round|int if notas else 0 }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-dark dashboard-card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-stopwatch fs-1 text-warning"></i>
+                </div>
+                <h5 class="text-muted">Tempo Médio por Questão</h5>
+                <div class="stat-value">{{ (tempo_medio_global / 60)|round|int }} min</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-dark dashboard-card">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-calendar-check fs-1 text-info"></i>
+                </div>
+                <h5 class="text-muted">Último Simulado</h5>
+                <div class="stat-value">{{ simulados[0].data_realizado.strftime('%d/%m') if simulados else '-' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos e Análises -->
+<div class="row mb-5">
+    <!-- Evolução da Nota TRI -->
+    <div class="col-md-6 mb-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Evolução da Nota TRI</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartEvolucaoTRI"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Desempenho por Área -->
+    <div class="col-md-6 mb-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Desempenho por Área</h5>
+            </div>
+            <div class="card-body">
+                {% for area, stats in areas_stats.items() %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>{{ area }}</span>
+                        <span>{{ stats.percentual }}%</span>
+                    </div>
+                    <div class="progress progress-thin">
+                        <div class="progress-bar bg-{{ 'success' if stats.percentual >= 70 else ('warning' if stats.percentual >= 50 else 'danger') }}" 
+                             style="width: {{ stats.percentual }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Padrões de Erro -->
+<div class="row mb-5">
+    <div class="col-md-7 mb-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Simulados Concluídos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Simulado</th>
+                                <th>Data</th>
+                                <th>Nota TRI</th>
+                                <th>Acertos</th>
+                                <th>Análise</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sim in simulados %}
+                            <tr>
+                                <td>{{ sim.titulo }}</td>
+                                <td>{{ sim.data_realizado.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if sim.nota_tri >= 700 else ('primary' if sim.nota_tri >= 600 else ('warning' if sim.nota_tri >= 500 else 'danger')) }} rounded-pill px-3 py-2">
+                                        {{ sim.nota_tri|int }}
+                                    </span>
+                                </td>
+                                <td>{{ sim.acertos_total if sim.acertos_total is defined else '-' }}/{{ sim.questoes.count() }}</td>
+                                <td>
+                                    <a href="{{ url_for('analise.desempenho_detalhado', simulado_id=sim.id) }}" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-graph-up"></i> Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5 mb-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Padrões de Erro Frequentes</h5>
+            </div>
+            <div class="card-body">
+                {% if erros_mais_frequentes %}
+                    <div class="list-group list-group-flush bg-dark">
+                        {% for erro in erros_mais_frequentes %}
+                        <div class="list-group-item bg-dark border-secondary">
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    <span class="badge bg-danger me-2">{{ erro.area }}</span>
+                                    Alternativa {{ erro.resposta }}
+                                </span>
+                                <span class="badge bg-secondary">{{ erro.count }}x</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <p class="text-muted">Estes são os padrões de erro mais frequentes nos seus simulados. Reveja os conteúdos dessas áreas para melhorar seu desempenho.</p>
+                    </div>
+                {% else %}
+                    <p class="text-center py-4">Não há dados suficientes para identificar padrões de erro.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Adicionais -->
+<div class="mb-5">
+    <h2 class="mb-4">Análises Avançadas</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark dashboard-card">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-bar-chart-steps fs-1 text-warning"></i>
+                    </div>
+                    <h5 class="mb-3">Comparar Simulados</h5>
+                    <p class="text-muted mb-4">Compare dois simulados lado a lado para identificar evoluções e tendências.</p>
+                    <a href="{{ url_for('analise.comparar_simulados') }}" class="btn btn-outline-warning">
+                        Comparar Simulados
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark dashboard-card">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+                    </div>
+                    <h5 class="mb-3">Exportar Relatório</h5>
+                    <p class="text-muted mb-4">Exporte um relatório completo do seu desempenho em PDF para compartilhar.</p>
+                    <a href="{{ url_for('analise.exportar_pdf', simulado_id=simulados[0].id) if simulados else '#' }}" class="btn btn-outline-danger">
+                        Exportar PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark dashboard-card">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="bi bi-journals fs-1 text-success"></i>
+                    </div>
+                    <h5 class="mb-3">Novo Simulado</h5>
+                    <p class="text-muted mb-4">Continue sua preparação realizando um novo simulado.</p>
+                    <a href="{{ url_for('simulados.index') }}" class="btn btn-outline-success">
+                        Fazer Novo Simulado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div> {% endblock %}
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script> document.addEventListener('DOMContentLoaded', function() { // Dados para os gráficos const datas = {{ datas|tojson if datas else '[]'|safe }}; const notas = {{ notas|tojson if notas else '[]'|safe }}; // Gráfico de evolução da nota TRI const ctxEvolucao = document.getElementById('chartEvolucaoTRI').getContext('2d'); new Chart(ctxEvolucao, { type: 'line', data: { labels: datas, datasets: [{ label: 'Nota TRI', data: notas, backgroundColor: 'rgba(0, 123, 255, 0.2)', borderColor: 'rgba(0, 123, 255, 1)', borderWidth: 2, tension: 0.3, pointBackgroundColor: 'rgba(0, 123, 255, 1)', pointBorderColor: '#fff', pointRadius: 5 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 1000, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } }, x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)' } } }, plugins: { legend: { labels: { color: 'rgba(255, 255, 255, 0.7)' } } } } }); }); </script>
+{% endblock %}
+

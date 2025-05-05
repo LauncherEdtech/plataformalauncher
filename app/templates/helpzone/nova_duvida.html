@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}Nova Dúvida - Help Zone - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="nova-duvida">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Nova Dúvida</h1>
+        <a href="{{ url_for('helpzone.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para o Help Zone
+        </a>
+    </div>
+    
+    <div class="card bg-dark">
+        <div class="card-body">
+            <form action="{{ url_for('helpzone.nova_duvida') }}" method="POST">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título da sua dúvida</label>
+                    <input type="text" name="titulo" id="titulo" class="form-control bg-dark text-light border-secondary"
+                           placeholder="Ex: Como resolver equações do segundo grau?" required>
+                    <div class="form-text text-muted">Seja claro e específico para aumentar suas chances de resposta.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="area" class="form-label">Área do conhecimento</label>
+                    <select name="area" id="area" class="form-select bg-dark text-light border-secondary" required>
+                        <option value="" selected disabled>Selecione uma área</option>
+                        {% for area in areas_disponiveis %}
+                            <option value="{{ area }}">{{ area|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="conteudo" class="form-label">Detalhes da sua dúvida</label>
+                    <textarea name="conteudo" id="conteudo" class="form-control bg-dark text-light border-secondary" 
+                              rows="10" placeholder="Explique sua dúvida com detalhes..." required></textarea>
+                    <div class="form-text text-muted">
+                        Explique em detalhes o que você já tentou, onde está tendo dificuldade, etc.
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Publicar Dúvida</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
