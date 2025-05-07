@@ -1,0 +1,482 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ simulado.titulo }} - Plataforma Launcher{% endblock %}
+
+{% block styles %}
+<style>
+    body {
+        background-color: #1a1d21;
+    }
+    
+    .simulado-container {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    
+    .content-wrapper {
+        background-color: white;
+        border-radius: 0;
+    }
+    
+    /* Cabeçalho do simulado */
+    .simulado-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: white;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .simulado-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000;
+        margin: 0;
+    }
+    
+    .simulado-info {
+        font-size: 14px;
+        color: #0084ff;
+        margin-top: 5px;
+    }
+    
+    .timer-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    #timer {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    
+    .avatar {
+        width: 30px;
+        height: 30px;
+        background-color: #0084ff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* Linha separadora */
+    .separator {
+        height: 1px;
+        background-color: #e5e5e5;
+        width: 100%;
+    }
+    
+    /* Barra de progresso */
+    .progresso-container {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background-color: white;
+    }
+    
+    .progresso-label {
+        color: #777;
+        font-size: 13px;
+        text-transform: uppercase;
+    }
+    
+    .progresso-track {
+        flex-grow: 1;
+        height: 4px;
+        background-color: #eee;
+        margin: 0 15px;
+        position: relative;
+    }
+    
+    .progresso-fill {
+        position: absolute;
+        height: 100%;
+        background-color: #0084ff;
+        left: 0;
+        top: 0;
+    }
+    
+    .progresso-value {
+        color: #777;
+        font-size: 13px;
+        margin-right: 15px;
+    }
+    
+    .btn-finalizar {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 6px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    /* Conteúdo principal */
+    .main-container {
+        display: flex;
+        background-color: white;
+    }
+    
+    /* Sidebar de questões */
+    .questoes-sidebar {
+        width: 175px;
+        background-color: #f0f0f0;
+        padding: 15px;
+    }
+    
+    .questoes-label {
+        color: #777;
+        font-size: 13px;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+    }
+    
+    .questoes-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+    }
+    
+    .questao-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        aspect-ratio: 1;
+        background-color: white;
+        color: #333;
+        border-radius: 3px;
+        font-size: 12px;
+        text-decoration: none;
+    }
+    
+    .questao-btn.active {
+        background-color: #0084ff;
+        color: white;
+    }
+    
+    /* Conteúdo da questão */
+    .questao-container {
+        flex-grow: 1;
+        padding: 15px 20px;
+    }
+    
+    .questao-title {
+        color: #0084ff;
+        font-size: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .questao-enunciado {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .questao-explicacao {
+        font-size: 13px;
+        color: #555;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+    
+    .questao-prompt {
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    /* Alternativas */
+    .alternativas {
+        margin-bottom: 40px;
+    }
+    
+    .alternativa {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+    }
+    
+    .alternativa-circle {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+    }
+    
+    .alternativa-circle-inner {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        background-color: #f3f3f3;
+    }
+    
+    .alternativa.selected .alternativa-circle-inner {
+        background-color: #0084ff;
+        color: white;
+    }
+    
+    .alternativa-texto {
+        font-size: 14px;
+        color: #333;
+    }
+    
+    /* Navegação inferior */
+    .bottom-nav {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background-color: #f8f8f8;
+        border-top: 1px solid #e5e5e5;
+    }
+    
+    .nav-btn {
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        text-decoration: none;
+        color: #555;
+    }
+    
+    .btn-anterior {
+        background-color: #e0e0e0;
+    }
+    
+    .btn-proximo {
+        background-color: #0084ff;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="simulado-container">
+    <!-- Cabeçalho -->
+    <div class="content-wrapper">
+        <div class="simulado-header">
+            <div>
+                <h1 class="simulado-title">{{ simulado.titulo }}</h1>
+                <div class="simulado-info">AVALIAÇÃO INICIADA EM {{ simulado.data_realizado.strftime('%d/%m/%Y - %H:%M') }}</div>
+            </div>
+            <div class="timer-container">
+                <div id="timer">00:00:00</div>
+                <div class="avatar">{{ current_user.username[0]|upper }}</div>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+        
+        <!-- Barra de progresso -->
+        <div class="progresso-container">
+            <div class="progresso-label">PROGRESSO</div>
+            <div class="progresso-track">
+                <div class="progresso-fill" style="width: {{ progresso }}%;"></div>
+            </div>
+            <div class="progresso-value">{{ progresso|int }}%</div>
+            <button class="btn-finalizar" data-bs-toggle="modal" data-bs-target="#modalFinalizar">Finalizar</button>
+        </div>
+        
+        <!-- Conteúdo principal -->
+        <div class="main-container">
+            <!-- Sidebar de questões -->
+            <div class="questoes-sidebar">
+                <div class="questoes-label">QUESTÕES</div>
+                <div class="questoes-grid">
+                    {% for q in todas_questoes %}
+                        {% if q.numero <= 50 %}
+                        <a href="{{ url_for('simulados.questao', simulado_id=simulado.id, questao_numero=q.numero) }}" 
+                           class="questao-btn {{ 'active' if q.numero == questao.numero else '' }}">
+                            {{ q.numero }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Conteúdo da questão -->
+            <div class="questao-container">
+                <div class="questao-title">QUESTÃO {{ questao.numero }}</div>
+                
+                <form method="POST" id="question-form">
+                    <input type="hidden" name="timestamp" id="timestamp" value="">
+                    
+                    <div class="questao-enunciado">{{ questao.texto|striptags|trim }}</div>
+                    
+                    <div class="questao-explicacao">
+                        O segredo para o funcionamento desses aparelhos está em uma palavra um pouco complicada: fotopletismografia, que significa, basicamente, usar a luz para medir o fluxo sanguíneo. Pulseiras e relógios inteligentes se valem da técnica para "escanear" as entranhas do seu pulso. Em linhas gerais, eles contam com pequenos LEDs na parte inferior, a que fica encostada na pele, que emitem luz verde ou vermelha. Os diferentes comprimentos de onda de luz desses emissores ópticos interagem de maneiras distintas com o sangue que flui pelo pulso. Depois, essa onda é captada por outro sensor no relógio, localizado ao lado do emissor óptico.
+                    </div>
+                    
+                    <div class="questao-prompt">O processo de detecção dos batimentos cardíacos por relógios de pulso está baseado, principalmente, na ocorrência de</div>
+                    
+                    <div class="alternativas">
+                        <div class="alternativa {{ 'selected' if questao.resposta_usuario == 'A' else '' }}" onclick="selectAlternative('A')">
+                            <input class="d-none" type="radio" name="resposta" id="alt-A" value="A" {{ 'checked' if questao.resposta_usuario == 'A' else '' }}>
+                            <div class="alternativa-circle">
+                                <div class="alternativa-circle-inner">A</div>
+                            </div>
+                            <div class="alternativa-texto">Reflexão</div>
+                        </div>
+                        
+                        <div class="alternativa {{ 'selected' if questao.resposta_usuario == 'B' else '' }}" onclick="selectAlternative('B')">
+                            <input class="d-none" type="radio" name="resposta" id="alt-B" value="B" {{ 'checked' if questao.resposta_usuario == 'B' else '' }}>
+                            <div class="alternativa-circle">
+                                <div class="alternativa-circle-inner">B</div>
+                            </div>
+                            <div class="alternativa-texto">Refração</div>
+                        </div>
+                        
+                        <div class="alternativa {{ 'selected' if questao.resposta_usuario == 'C' else '' }}" onclick="selectAlternative('C')">
+                            <input class="d-none" type="radio" name="resposta" id="alt-C" value="C" {{ 'checked' if questao.resposta_usuario == 'C' else '' }}>
+                            <div class="alternativa-circle">
+                                <div class="alternativa-circle-inner">C</div>
+                            </div>
+                            <div class="alternativa-texto">Difusão</div>
+                        </div>
+                        
+                        <div class="alternativa {{ 'selected' if questao.resposta_usuario == 'D' else '' }}" onclick="selectAlternative('D')">
+                            <input class="d-none" type="radio" name="resposta" id="alt-D" value="D" {{ 'checked' if questao.resposta_usuario == 'D' else '' }}>
+                            <div class="alternativa-circle">
+                                <div class="alternativa-circle-inner">D</div>
+                            </div>
+                            <div class="alternativa-texto">Difração</div>
+                        </div>
+                        
+                        <div class="alternativa {{ 'selected' if questao.resposta_usuario == 'E' else '' }}" onclick="selectAlternative('E')">
+                            <input class="d-none" type="radio" name="resposta" id="alt-E" value="E" {{ 'checked' if questao.resposta_usuario == 'E' else '' }}>
+                            <div class="alternativa-circle">
+                                <div class="alternativa-circle-inner">E</div>
+                            </div>
+                            <div class="alternativa-texto">Polarização</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Navegação inferior -->
+        <div class="bottom-nav">
+            {% set prev_questao = None %}
+            {% set next_questao = None %}
+            
+            {% for q in todas_questoes %}
+                {% if q.numero < questao.numero %}
+                    {% set prev_questao = q %}
+                {% endif %}
+                {% if q.numero > questao.numero and not next_questao %}
+                    {% set next_questao = q %}
+                {% endif %}
+            {% endfor %}
+            
+            {% if prev_questao %}
+                <a href="{{ url_for('simulados.questao', simulado_id=simulado.id, questao_numero=prev_questao.numero) }}" class="nav-btn btn-anterior">
+                    ← Anterior
+                </a>
+            {% else %}
+                <button class="nav-btn btn-anterior" disabled>
+                    ← Anterior
+                </button>
+            {% endif %}
+            
+            {% if next_questao %}
+                <a href="{{ url_for('simulados.questao', simulado_id=simulado.id, questao_numero=next_questao.numero) }}" class="nav-btn btn-proximo">
+                    Próximo →
+                </a>
+            {% else %}
+                <a href="{{ url_for('simulados.finalizar', simulado_id=simulado.id) }}" class="nav-btn btn-proximo">
+                    Finalizar Simulado
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Finalizar -->
+<div class="modal fade" id="modalFinalizar" tabindex="-1" aria-labelledby="modalFinalizarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFinalizarLabel">Finalizar Simulado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja finalizar o simulado?</p>
+                <p class="text-warning">Atenção: Questões não respondidas serão consideradas erradas para o cálculo da sua nota.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="{{ url_for('simulados.finalizar', simulado_id=simulado.id) }}" class="btn btn-danger">Finalizar Agora</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Timer do simulado
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pegar o tempo inicial a partir de um atributo de dados
+        let startTime = new Date("{{ simulado.data_realizado.isoformat() }}");
+        let timerElement = document.getElementById('timer');
+        
+        function updateTimer() {
+            let now = new Date();
+            let diff = Math.floor((now - startTime) / 1000);
+            
+            let hours = Math.floor(diff / 3600);
+            let minutes = Math.floor((diff % 3600) / 60);
+            let seconds = diff % 60;
+            
+            // Formatar o tempo
+            const formattedHours = hours.toString().padStart(2, '0');
+            const formattedMinutes = minutes.toString().padStart(2, '0');
+            const formattedSeconds = seconds.toString().padStart(2, '0');
+            
+            // Atualizar o display do timer
+            timerElement.textContent = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+            
+            // Também atualizamos o timestamp hidden
+            document.getElementById('timestamp').value = diff;
+        }
+        
+        // Atualizar a cada segundo
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    });
+    
+    // Função para selecionar alternativa ao clicar
+    function selectAlternative(letra) {
+        // Marcar o radio button
+        document.getElementById('alt-' + letra).checked = true;
+        
+        // Atualizar visuais
+        document.querySelectorAll('.alternativa').forEach(function(item) {
+            item.classList.remove('selected');
+        });
+        
+        document.getElementById('alt-' + letra).closest('.alternativa').classList.add('selected');
+        
+        // Submeter o formulário automaticamente
+        setTimeout(function() {
+            document.getElementById('question-form').submit();
+        }, 300);
+    }
+</script>
+{% endblock %}

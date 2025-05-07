@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}Help Zone - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="helpzone">
+    <h1 class="mb-2">Help Zone - Aqui um ajuda o outro a decolar</h1>
+    <p class="lead mb-5">Poste suas dúvidas ou escolha ajudar alguém. Juntos, vamos mais longe!</p>
+    
+    <div class="d-flex justify-content-center gap-3 mb-5">
+        <a href="{{ url_for('helpzone.nova_duvida') }}" class="btn btn-primary">Nova Dúvida</a>
+        <a href="{{ url_for('helpzone.index') }}" class="btn btn-outline-light">Ver Dúvidas Abertas</a>
+    </div>
+    
+    <!-- Filtros e Busca -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <form action="{{ url_for('helpzone.index') }}" method="GET" class="d-flex">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary">
+                        <i class="bi bi-search text-light"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control bg-dark border-secondary text-light" 
+                           placeholder="Digite a palavra-chave" value="{{ palavrachave }}">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-3">
+            <select name="area" class="form-select bg-dark border-secondary text-light" 
+                    onchange="this.form.submit()" form="filtros">
+                <option value="">Filtrar por Área</option>
+                {% for area in areas_disponiveis %}
+                    <option value="{{ area }}" {% if area == area_selecionada %}selected{% endif %}>
+                        {{ area|capitalize }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="ordenar" class="form-select bg-dark border-secondary text-light" 
+                    onchange="this.form.submit()" form="filtros">
+                <option value="recentes" {% if ordenar == 'recentes' %}selected{% endif %}>Ordenar por: Mais Recentes</option>
+                <option value="populares" {% if ordenar == 'populares' %}selected{% endif %}>Ordenar por: Mais Populares</option>
+            </select>
+        </div>
+    </div>
+    
+    <form id="filtros" action="{{ url_for('helpzone.index') }}" method="GET">
+        <input type="hidden" name="q" value="{{ palavrachave }}">
+    </form>
+    
+    <div class="row">
+        <!-- Lista de Dúvidas -->
+        <div class="col-lg-9">
+            {% if duvidas %}
+                {% for duvida in duvidas %}
+                <div class="card bg-dark mb-4">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                <img src="{{ url_for('static', filename='images/avatars/' ~ duvida.user_id ~ '.jpg', _external=True) }}" 
+                                     class="rounded-circle" width="48" height="48" alt="Avatar"
+                                     onerror="this.src='{{ url_for('static', filename='images/avatar-default.jpg') }}'">
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">{{ User.query.get(duvida.user_id).username }}</small>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h4 class="card-title mb-1">
+                                    <a href="{{ url_for('helpzone.duvida', duvida_id=duvida.id) }}" class="text-light text-decoration-none">
+                                        {{ duvida.titulo }}
+                                    </a>
+                                </h4>
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="badge bg-primary me-2">{{ duvida.area }}</span>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>
+                                        {% set tempo = (now - duvida.data_criacao).total_seconds() %}
+                                        {% if tempo < 60 %}
+                                            agora mesmo
+                                        {% elif tempo < 3600 %}
+                                            há {{ (tempo // 60)|int }} minutos
+                                        {% elif tempo < 86400 %}
+                                            há {{ (tempo // 3600)|int }} horas
+                                        {% else %}
+                                            {{ duvida.data_criacao.strftime('%d/%m/%Y') }}
+                                        {% endif %}
+                                    </small>
+                                    
+                                    {% if duvida.resolvida %}
+                                        <span class="badge bg-success ms-2">Resolvida</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark ms-2">Aberta</span>
+                                    {% endif %}
+                                </div>
+                                <p class="card-text">
+                                    {{ duvida.conteudo|truncate(200) }}
+                                </p>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="{{ url_for('helpzone.duvida', duvida_id=duvida.id) }}" class="btn btn-sm btn-outline-primary">
+                                            Responder Dúvida
+                                        </a>
+                                        <a href="{{ url_for('helpzone.mesma_duvida', duvida_id=duvida.id) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                            Tenho a mesma dúvida
+                                        </a>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-chat-dots me-1"></i>
+                                        <span class="me-3">{{ duvida.respostas.count() }}</span>
+                                        <i class="bi bi-arrow-up-circle me-1"></i>
+                                        <span>{{ duvida.total_votos() }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card bg-dark">
+                    <div class="card-body text-center p-5">
+                        <p class="mb-3">Nenhuma dúvida encontrada com os filtros atuais.</p>
+                        <a href="{{ url_for('helpzone.nova_duvida') }}" class="btn btn-primary">
+                            Seja o primeiro a fazer uma pergunta!
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Top Ajudantes da Semana -->
+        <div class="col-lg-3">
+            <div class="card bg-dark mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Top ajudantes da Semana</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-flush bg-dark">
+                        {% for ajudante in top_ajudantes %}
+                        <li class="list-group-item bg-dark border-secondary d-flex align-items-center">
+                            <span class="badge 
+                                       {% if loop.index == 1 %}bg-warning text-dark
+                                       {% elif loop.index == 2 %}bg-secondary
+                                       {% elif loop.index == 3 %}bg-danger
+                                       {% else %}bg-primary{% endif %} me-2">
+                                {{ loop.index }}º
+                            </span>
+                            <img src="{{ url_for('static', filename='images/avatars/' ~ ajudante.id ~ '.jpg', _external=True) }}" 
+                                 class="rounded-circle me-2" width="32" height="32" alt="Avatar"
+                                 onerror="this.src='{{ url_for('static', filename='images/avatar-default.jpg') }}'">
+                            <span>{{ ajudante.username }}</span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

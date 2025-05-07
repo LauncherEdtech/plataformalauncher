@@ -1,0 +1,141 @@
+{% extends "layout.html" %}
+
+{% block title %}Resultado do Simulado - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="simulado-resultado">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Resultado do Simulado</h1>
+        <a href="{{ url_for('simulados.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para Simulados
+        </a>
+    </div>
+    
+    <div class="card bg-dark mb-5">
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="card-title mb-3">{{ simulado.titulo }}</h3>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Concluído em {{ simulado.data_realizado.strftime('%d/%m/%Y às %H:%M') }}
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-stopwatch me-2"></i>
+                        Tempo total: {{ simulado.tempo_realizado }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="nota-tri mb-2">
+                        <h2 class="display-4 mb-0">{{ simulado.nota_tri|int }}</h2>
+                        <p class="text-muted">Nota TRI</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Desempenho por Área -->
+    <h2 class="mb-4">Desempenho por Área</h2>
+    <div class="row mb-5">
+        {% for area_nome, area_dados in areas.items() %}
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body">
+                    <h4 class="card-title mb-3">{{ area_nome }}</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Acertos:</span>
+                        <span>{{ area_dados.acertos }} de {{ area_dados.total }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ area_dados.percentual }}%;" 
+                             aria-valuenow="{{ area_dados.percentual }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="text-end text-muted">
+                        {{ area_dados.percentual|round|int }}% de acertos
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Questões do Simulado -->
+    <h2 class="mb-4">Questões do Simulado</h2>
+    <div class="accordion" id="accordionQuestoes">
+        {% for questao in simulado.questoes %}
+        <div class="accordion-item bg-dark border-secondary mb-3">
+            <h2 class="accordion-header" id="heading{{ questao.numero }}">
+                <button class="accordion-button collapsed bg-dark text-light" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#collapse{{ questao.numero }}" 
+                        aria-expanded="false" aria-controls="collapse{{ questao.numero }}">
+                    <div class="d-flex align-items-center w-100">
+                        <span class="me-3">Questão {{ questao.numero }}</span>
+                        {% if questao.resposta_usuario == questao.resposta_correta %}
+                            <span class="badge bg-success me-auto">Correta</span>
+                        {% else %}
+                            <span class="badge bg-danger me-auto">Incorreta</span>
+                        {% endif %}
+                        <span class="ms-auto">{{ questao.area }}</span>
+                    </div>
+                </button>
+            </h2>
+            <div id="collapse{{ questao.numero }}" class="accordion-collapse collapse" 
+                 aria-labelledby="heading{{ questao.numero }}" data-bs-parent="#accordionQuestoes">
+                <div class="accordion-body">
+                    <div class="questao-texto mb-4">
+                        {{ questao.texto|safe }}
+                    </div>
+                    
+                    <div class="alternativas">
+                        {% for alt in questao.alternativas %}
+                        <div class="form-check mb-3">
+                            <div class="d-flex align-items-start
+                                {{ 'text-success fw-bold' if alt.letra == questao.resposta_correta else '' }}
+                                {{ 'text-danger' if alt.letra == questao.resposta_usuario and questao.resposta_usuario != questao.resposta_correta else '' }}">
+                                <div class="me-2">
+                                    {{ alt.letra }}.
+                                    {% if alt.letra == questao.resposta_correta %}
+                                        <i class="bi bi-check-circle-fill text-success ms-1"></i>
+                                    {% elif alt.letra == questao.resposta_usuario %}
+                                        <i class="bi bi-x-circle-fill text-danger ms-1"></i>
+                                    {% endif %}
+                                </div>
+                                <div>{{ alt.texto|safe }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mt-3 p-3 border-start border-4 border-info bg-dark">
+                        <h6 class="text-info">Sua Resposta:</h6>
+                        <p class="mb-0">
+                            {% if questao.resposta_usuario %}
+                                Você respondeu: <strong>{{ questao.resposta_usuario }}</strong>
+                                {% if questao.resposta_usuario == questao.resposta_correta %}
+                                    <span class="text-success ms-2"><i class="bi bi-check-circle-fill"></i> Correto!</span>
+                                {% else %}
+                                    <span class="text-danger ms-2"><i class="bi bi-x-circle-fill"></i> Incorreto!</span>
+                                    <br>Resposta correta: <strong>{{ questao.resposta_correta }}</strong>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-warning"><i class="bi bi-exclamation-circle-fill"></i> Questão não respondida</span>
+                                <br>Resposta correta: <strong>{{ questao.resposta_correta }}</strong>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-5">
+        <a href="{{ url_for('simulados.index') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-arrow-left"></i> Voltar para Simulados
+        </a>
+    </div>
+</div>
+{% endblock %}

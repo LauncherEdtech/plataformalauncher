@@ -1,0 +1,220 @@
+{% extends "layout.html" %}
+
+{% block title %}Análise de Desempenho - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="analise">
+    <h1 class="mb-4">Análise de Desempenho</h1>
+    <p class="lead mb-5">Entenda seus pontos fortes e fracos para direcionar seus estudos com inteligência.</p>
+    
+    <!-- Estatísticas gerais -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Simulados Concluídos</h6>
+                <div class="stat-value">{{ simulados_concluidos }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Questões Respondidas</h6>
+                <div class="stat-value">{{ total_questoes }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Acertos</h6>
+                <div class="stat-value">{{ total_acertos }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Percentual de Acertos</h6>
+                <div class="stat-value">{{ percentual_acertos|round|int }}%</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráficos -->
+    <div class="row mb-5">
+        <!-- Evolução TRI -->
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Evolução da Nota TRI</h5>
+                </div>
+                <div class="card-body">
+                    {% if notas %}
+                        <canvas id="chartTRI" width="100%" height="250"></canvas>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <p class="mb-0">Você ainda não tem histórico de notas TRI.</p>
+                            <a href="{{ url_for('simulados.index') }}" class="btn btn-primary mt-3">Fazer Simulado</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Desempenho por Área -->
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Desempenho por Área</h5>
+                </div>
+                <div class="card-body">
+                    {% if desempenho_areas %}
+                        <canvas id="chartAreas" width="100%" height="250"></canvas>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <p class="mb-0">Você ainda não tem dados de desempenho por área.</p>
+                            <a href="{{ url_for('simulados.index') }}" class="btn btn-primary mt-3">Fazer Simulado</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Links para análises detalhadas -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-clipboard-data display-4 mb-3"></i>
+                    <h4 class="mb-3">Histórico de Simulados</h4>
+                    <p class="mb-4">Veja todos os seus simulados realizados com detalhes de desempenho.</p>
+                    <a href="{{ url_for('analise.simulados') }}" class="btn btn-primary">Ver Simulados</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-journals display-4 mb-3"></i>
+                    <h4 class="mb-3">Desempenho por Área</h4>
+                    <p class="mb-4">Analise seu desempenho em cada área do conhecimento.</p>
+                    <a href="{{ url_for('analise.areas') }}" class="btn btn-primary">Ver por Área</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-graph-up-arrow display-4 mb-3"></i>
+                    <h4 class="mb-3">Relatório de Evolução</h4>
+                    <p class="mb-4">Visualize sua trajetória de estudos e evolução ao longo do tempo.</p>
+                    <a href="#" class="btn btn-outline-secondary">Em breve</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if notas %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de evolução TRI
+        const ctxTRI = document.getElementById('chartTRI').getContext('2d');
+        const chartTRI = new Chart(ctxTRI, {
+            type: 'line',
+            data: {
+                labels: {{ datas|tojson }},
+                datasets: [{
+                    label: 'Nota TRI',
+                    data: {{ notas|tojson }},
+                    backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 0,
+                        max: 1000,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Gráfico de desempenho por área
+        const ctxAreas = document.getElementById('chartAreas').getContext('2d');
+        const chartAreas = new Chart(ctxAreas, {
+            type: 'bar',
+            data: {
+                labels: [{% for area, dados in desempenho_areas.items() %}'{{ area }}',{% endfor %}],
+                datasets: [{
+                    label: 'Percentual de Acertos',
+                    data: [{% for area, dados in desempenho_areas.items() %}{{ dados.percentual|round|int }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

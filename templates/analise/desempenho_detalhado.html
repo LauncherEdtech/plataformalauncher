@@ -1,0 +1,329 @@
+{% extends "layout.html" %}
+
+{% block title %}Desempenho Detalhado - Simulado - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="desempenho-detalhado">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Análise Detalhada de Desempenho</h1>
+        <a href="{{ url_for('analise.simulados') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para Simulados
+        </a>
+    </div>
+    
+    <div class="card bg-dark mb-5">
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3 class="card-title mb-3">{{ simulado.titulo }}</h3>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Realizado em {{ simulado.data_realizado.strftime('%d/%m/%Y às %H:%M') }}
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-stopwatch me-2"></i>
+                        Tempo total: {{ simulado.tempo_realizado }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="nota-tri mb-2">
+                        <h2 class="display-4 mb-0">{{ simulado.nota_tri|int }}</h2>
+                        <p class="text-muted">Nota TRI</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estatísticas gerais -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Questões Respondidas</h6>
+                <div class="stat-value">{{ total_questoes }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Acertos</h6>
+                <div class="stat-value">{{ total_acertos }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Percentual de Acertos</h6>
+                <div class="stat-value">{{ total_percentual|round|int }}%</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="stat-card bg-dark text-center p-3 h-100">
+                <h6 class="text-muted mb-3">Nota Média</h6>
+                <div class="stat-value">{% if notas|length > 0 %}{{ (notas|map('float')|sum / notas|length)|round|int }}{% else %}0{% endif %}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráficos -->
+    <div class="row mb-5">
+        <!-- Desempenho por Área -->
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Desempenho por Área</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartAreas" width="100%" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Desempenho por Dificuldade -->
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Desempenho por Dificuldade</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chartDificuldades" width="100%" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detalhes por Área -->
+    <h2 class="mb-4">Detalhes por Área</h2>
+    <div class="row mb-5">
+        {% for area_nome, area_dados in areas.items() %}
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ area_nome }}</h5>
+                    <span class="badge bg-primary">{{ area_dados.percentual|round|int }}%</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Acertos:</span>
+                        <span>{{ area_dados.acertos }} de {{ area_dados.total }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ area_dados.percentual }}%;" 
+                             aria-valuenow="{{ area_dados.percentual }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between small text-muted mt-3">
+                        <span>Média: {% if area_dados.notas|length > 0 %}{{ (area_dados.notas|sum / area_dados.notas|length)|round(2) }}{% else %}0.0{% endif %}</span>
+                        <span>Total: {{ area_dados.total }} questões</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Detalhes por Dificuldade -->
+    <h2 class="mb-4">Detalhes por Dificuldade</h2>
+    <div class="row mb-5">
+        {% for dif_nome, dif_dados in dificuldades.items() %}
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ dif_nome }}</h5>
+                    <span class="badge bg-primary">{{ dif_dados.percentual|round|int }}%</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Acertos:</span>
+                        <span>{{ dif_dados.acertos }} de {{ dif_dados.total }}</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar 
+                                  {% if dif_nome == 'Fácil' %}bg-success
+                                  {% elif dif_nome == 'Média' %}bg-warning
+                                  {% else %}bg-danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ dif_dados.percentual }}%;" 
+                             aria-valuenow="{{ dif_dados.percentual }}" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between small text-muted mt-3">
+                        <span>Média: {% if dif_dados.notas|length > 0 %}{{ (dif_dados.notas|sum / dif_dados.notas|length)|round(2) }}{% else %}0.0{% endif %}</span>
+                        <span>Total: {{ dif_dados.total }} questões</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Lista de Questões -->
+    <h2 class="mb-4">Detalhes por Questão</h2>
+    <div class="card bg-dark mb-5">
+        <div class="card-header">
+            <h5 class="mb-0">Questões do Simulado</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Questão</th>
+                            <th>Área</th>
+                            <th>Dificuldade</th>
+                            <th>Sua Resposta</th>
+                            <th>Resposta Correta</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for questao in questoes_detalhes %}
+                        <tr>
+                            <td>{{ questao.numero }}</td>
+                            <td>{{ questao.area }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if questao.dificuldade == 'Fácil' %}bg-success
+                                    {% elif questao.dificuldade == 'Média' %}bg-warning text-dark
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ questao.dificuldade }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if questao.resposta_usuario %}
+                                    {{ questao.resposta_usuario }}
+                                {% else %}
+                                    <span class="text-muted">Em branco</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ questao.resposta_correta }}</td>
+                            <td>
+                                {% if questao.acertou %}
+                                    <span class="badge bg-success">Acerto</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Erro</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de desempenho por área
+        const ctxAreas = document.getElementById('chartAreas').getContext('2d');
+        const chartAreas = new Chart(ctxAreas, {
+            type: 'bar',
+            data: {
+                labels: [{% for area_nome, area_dados in areas.items() %}'{{ area_nome }}',{% endfor %}],
+                datasets: [{
+                    label: 'Percentual de Acertos',
+                    data: [{% for area_nome, area_dados in areas.items() %}{{ area_dados.percentual|round|int }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // Gráfico de desempenho por dificuldade
+        const ctxDif = document.getElementById('chartDificuldades').getContext('2d');
+        const chartDif = new Chart(ctxDif, {
+            type: 'bar',
+            data: {
+                labels: [{% for dif_nome, dif_dados in dificuldades.items() %}'{{ dif_nome }}',{% endfor %}],
+                datasets: [{
+                    label: 'Percentual de Acertos',
+                    data: [{% for dif_nome, dif_dados in dificuldades.items() %}{{ dif_dados.percentual|round|int }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(220, 53, 69, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            color: 'rgba(255, 255, 255, 0.7)'

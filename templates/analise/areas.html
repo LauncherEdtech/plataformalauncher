@@ -1,0 +1,159 @@
+{% extends "layout.html" %}
+
+{% block title %}Áreas - Análise de Desempenho - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="analise-areas">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Desempenho por Área</h1>
+        <a href="{{ url_for('analise.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para Análise
+        </a>
+    </div>
+    
+    <p class="lead mb-5">Entenda seu desempenho detalhado em cada área do conhecimento e otimize seus estudos.</p>
+    
+    <!-- Cartões de Área -->
+    <div class="row mb-5">
+        {% for area in areas %}
+            {% set dados = estatisticas_areas[area] %}
+            <div class="col-md-6 mb-4">
+                <div class="card bg-dark h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ area }}</h5>
+                        <span class="badge bg-primary px-3 py-2">{{ dados.percentual|round|int }}%</span>
+                    </div>
+                    <div class="card-body">
+                        <!-- Estatísticas Gerais -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Acertos:</span>
+                                <span>{{ dados.acertos }} de {{ dados.total }}</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ dados.percentual }}%;" 
+                                     aria-valuenow="{{ dados.percentual }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progresso por Dificuldade -->
+                        <h6 class="mb-3">Por Nível de Dificuldade</h6>
+                        
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>Fácil:</span>
+                                <span>{{ dados.faceis_acertos }} de {{ dados.faceis_total }}</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ dados.faceis_percentual }}%;" 
+                                     aria-valuenow="{{ dados.faceis_percentual }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small">
+                                <span>Média:</span>
+                                <span>{{ dados.medias_acertos }} de {{ dados.medias_total }}</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {{ dados.medias_percentual }}%;" 
+                                     aria-valuenow="{{ dados.medias_percentual }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between small">
+                                <span>Difícil:</span>
+                                <span>{{ dados.dificeis_acertos }} de {{ dados.dificeis_total }}</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-danger" role="progressbar" 
+                                     style="width: {{ dados.dificeis_percentual }}%;" 
+                                     aria-valuenow="{{ dados.dificeis_percentual }}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Estatísticas de Evolução em vez de Gráfico -->
+                        <h6 class="mb-3">Estatísticas de Evolução</h6>
+                        {% if dados.historico_percentual and dados.historico_percentual|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-dark">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Percentual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% set count = 0 %}
+                                        {% for item in dados.historico_percentual %}
+                                            {% if count < 5 %}
+                                                <tr>
+                                                    <td>{{ item.data }}</td>
+                                                    <td>{{ item.percentual|round|int }}%</td>
+                                                </tr>
+                                                {% set count = count + 1 %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center">Não há dados suficientes para mostrar a evolução.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Recomendações de Estudo -->
+    <h2 class="mb-4">Recomendações de Estudo</h2>
+    
+    <div class="card bg-dark mb-5">
+        <div class="card-body">
+            <div class="row">
+                {% for area in areas %}
+                    {% set dados = estatisticas_areas[area] %}
+                    <div class="col-md-6 mb-4">
+                        <div class="d-flex">
+                            {% if dados.percentual < 50 %}
+                                <div class="me-3">
+                                    <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+                                </div>
+                                <div>
+                                    <h5>{{ area }}</h5>
+                                    <p class="mb-0">Foque nesta área! Seu desempenho está abaixo de 50%. Recomendamos mais tempo de estudo e simulados específicos.</p>
+                                </div>
+                            {% elif dados.percentual < 70 %}
+                                <div class="me-3">
+                                    <i class="bi bi-info-circle-fill fs-2 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h5>{{ area }}</h5>
+                                    <p class="mb-0">Bom progresso, mas ainda pode melhorar. Foque principalmente em questões de dificuldade média e alta.</p>
+                                </div>
+                            {% else %}
+                                <div class="me-3">
+                                    <i class="bi bi-check-circle-fill fs-2 text-success"></i>
+                                </div>
+                                <div>
+                                    <h5>{{ area }}</h5>
+                                    <p class="mb-0">Ótimo desempenho! Continue praticando para manter o nível, com foco em questões de alta dificuldade.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
