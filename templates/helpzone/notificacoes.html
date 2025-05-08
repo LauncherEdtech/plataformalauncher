@@ -1,0 +1,229 @@
+<!-- app/templates/helpzone/notificacoes.html -->
+<!-- Autor: Desenvolvimento Plataforma Launcher -->
+
+{% extends "layout.html" %}
+
+{% block title %}Notificações - Help Zone - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #800000;
+        --secondary-color: #500000;
+        --text-color: #ffffff;
+        --card-bg: rgba(30, 30, 30, 0.8);
+        --tag-bg: #800000;
+        --hover-color: #a00000;
+    }
+    
+    body {
+        background: linear-gradient(180deg,
+            #800000 0%,
+            #000000 40%,
+            #000000 75%,
+            #000000 100%);
+        color: var(--text-color);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .helpzone-notificacoes {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--hover-color) !important;
+        border-color: var(--hover-color) !important;
+    }
+    
+    .btn-outline-primary {
+        color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color) !important;
+        color: white !important;
+    }
+    
+    .btn-outline-light:hover, .btn-outline-secondary:hover {
+        background-color: var(--hover-color) !important;
+        border-color: var(--hover-color) !important;
+    }
+    
+    .card {
+        background-color: var(--card-bg) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        margin-bottom: 1rem;
+    }
+    
+    .list-group-item {
+        background-color: rgba(30, 30, 30, 0.5) !important;
+        border-color: rgba(80, 80, 80, 0.2) !important;
+        margin-bottom: 8px;
+        border-radius: 6px !important;
+    }
+    
+    .list-group-item-new {
+        background-color: rgba(128, 0, 0, 0.15) !important;
+    }
+    
+    .notification-indicator {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .notification-indicator .badge {
+        width: 10px;
+        height: 10px;
+        padding: 0;
+        background-color: var(--primary-color) !important;
+    }
+    
+    h1 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+    
+    .bg-primary {
+        background-color: var(--primary-color) !important;
+    }
+</style>
+
+<div class="helpzone-notificacoes">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Notificações</h1>
+        <div>
+            <a href="{{ url_for('helpzone.index') }}" class="btn btn-outline-light me-2">
+                <i class="bi bi-arrow-left"></i> Voltar para o Help Zone
+            </a>
+            <form action="{{ url_for('helpzone.marcar_todas_notificacoes_lidas') }}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-check-all"></i> Marcar todas como lidas
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    {% if notificacoes %}
+        <div class="list-group">
+            {% for notificacao in notificacoes %}
+                <div class="list-group-item bg-dark border-secondary d-flex align-items-center {{ '' if notificacao.lida else 'list-group-item-new' }}">
+                    <div class="me-3 notification-indicator">
+                        {% if not notificacao.lida %}
+                            <span class="badge rounded-pill bg-primary"></span>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ notificacao.conteudo }}</h5>
+                            <small class="text-muted">
+                                {% set tempo = (now - notificacao.data_criacao).total_seconds() %}
+                                {% if tempo < 60 %}
+                                    agora mesmo
+                                {% elif tempo < 3600 %}
+                                    há {{ (tempo // 60)|int }} minutos
+                                {% elif tempo < 86400 %}
+                                    há {{ (tempo // 3600)|int }} horas
+                                {% else %}
+                                    {{ notificacao.data_criacao.strftime('%d/%m/%Y') }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            {% if notificacao.link %}
+                                <a href="{{ notificacao.link }}" class="btn btn-sm btn-outline-primary notification-link"
+                                   data-id="{{ notificacao.id }}">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            {% endif %}
+                            <form class="mark-read-form" data-id="{{ notificacao.id }}">
+                                {% if not notificacao.lida %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-check"></i> Marcar como lida
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card bg-dark">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-bell fs-1 mb-3 text-muted"></i>
+                <h4 class="mb-3">Não há notificações</h4>
+                <p class="mb-4">Você não tem notificações no momento.</p>
+                <a href="{{ url_for('helpzone.index') }}" class="btn btn-primary">
+                    Explorar o Help Zone
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Marcar notificação como lida ao clicar
+        document.querySelectorAll('.mark-read-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const notificationId = this.dataset.id;
+                fetch(`/helpzone/notificacoes/${notificationId}/marcar-lida`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remover o indicador e o botão
+                        const listItem = this.closest('.list-group-item');
+                        listItem.classList.remove('list-group-item-new');
+                        const indicator = listItem.querySelector('.notification-indicator .badge');
+                        if (indicator) indicator.remove();
+                        this.remove();
+                        
+                        // Atualizar o contador de notificações no menu
+                        const counter = document.querySelector('.notifications-counter');
+                        if (counter) {
+                            const count = parseInt(counter.textContent) - 1;
+                            if (count > 0) {
+                                counter.textContent = count;
+                            } else {
+                                counter.remove();
+                            }
+                        }
+                    }
+                });
+            });
+        });
+        
+        // Marcar como lida ao clicar no link
+        document.querySelectorAll('.notification-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const notificationId = this.dataset.id;
+                fetch(`/helpzone/notificacoes/${notificationId}/marcar-lida`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

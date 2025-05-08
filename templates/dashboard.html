@@ -1,0 +1,211 @@
+{% extends "layout.html" %}
+
+{% block title %}Launcher ENEM 2025{% endblock %}
+
+{% block content %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(to bottom, #00205B 0%, #001233 25%, #000 40%, #000 100%);
+        color: white;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .header {
+        padding: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 40px;
+    }
+
+    .header-left {
+        display: flex;
+        gap: 15px;
+        max-width: 65%;
+    }
+
+    .header-icon {
+        width: 30px;
+        height: 30px;
+        margin-top: 5px;
+    }
+
+    .header-content h1 {
+        font-size: 24px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .header-content p {
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 20px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .header-right {
+        flex-shrink: 0;
+        width: 240px;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .header-right img {
+        width: 100%;
+        display: block;
+    }
+
+    .motivation-box {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 8px;
+        border-radius: 5px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .button img {
+        width: 22px;
+        height: 22px;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 30px 0 20px 0;
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .card {
+        background-color: #333;
+        height: 170px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='images/rocket-icon.png') }}" alt="Rocket" class="header-icon">
+            <div class="header-content">
+                <h1>Decole rumo à aprovação no ENEM 2025</h1>
+                <p>Com os métodos inteligentes da Plataforma Launcher, estudar nunca foi tão estratégico. Aqui, seu esforço vira resultado: aprenda com os melhores métodos, no seu ritmo, do seu jeito.</p>
+
+                <div class="buttons">
+                    <div class="button">
+                        <img src="{{ url_for('static', filename='images/app-icon.png') }}" alt="App">
+                        Acessar App Launcher Quiz Enem
+                    </div>
+                    <div class="button">
+                        <img src="{{ url_for('static', filename='images/whatsapp-icon.png') }}" alt="WhatsApp">
+                        Suporte WhatsApp
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <img src="{{ url_for('static', filename='images/students.png') }}" alt="Students">
+            <div class="motivation-box">
+                Aqui seu esforço vale mais!<br>
+                👨‍🎓 Aprenda. 🚀 Avance. 🏆 Recompense-se.
+            </div>
+        </div>
+    </div>
+
+    <h2 class="section-title">Comece por Aqui</h2>
+    <div class="card-grid">
+        <div class="card"></div>
+        <div class="card"></div>
+        <div class="card"></div>
+        <div class="card"></div>
+    </div>
+    <h2 class="section-title">Revisão Turbo</h2>
+    <div class="card-grid">
+        <div class="card"></div>
+        <div class="card"></div>
+        <div class="card"></div>
+        <div class="card"></div>
+    </div>
+    <h2 class="section-title">Comece por Aqui</h2>
+    <div class="card-grid">
+        <div class="card"></div>
+        <div class="card"></div>
+        <div class="card"></div>
+        <div class="card"></div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('mouseover', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 5px 15px rgba(0, 123, 255, 0.3)';
+            this.style.transition = 'all 0.3s ease';
+        });
+
+        card.addEventListener('mouseout', function() {
+            this.style.transform = '';
+            this.style.boxShadow = '';
+        });
+
+        card.addEventListener('click', function() {
+            alert('Conteúdo em breve disponível!');
+        });
+    });
+
+    document.querySelectorAll('.button').forEach(button => {
+        button.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+
+            if (this.textContent.includes('WhatsApp')) {
+                window.open('https://wa.me/5500000000000', '_blank');
+            }
+        });
+    });
+</script>
+
+{% endblock %}

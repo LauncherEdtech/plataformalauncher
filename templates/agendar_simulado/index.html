@@ -1,0 +1,234 @@
+{% extends "layout.html" %}
+
+{% block title %}Agendar Simulado - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="agendar-simulado">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Agendar Simulado Personalizado</h1>
+        <a href="{{ url_for('simulados.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para Simulados
+        </a>
+    </div>
+    
+    <p class="lead mb-5">Configure seu simulado personalizado escolhendo áreas, quantidade de questões e duração.</p>
+    
+    <div class="card bg-dark mb-5">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('agendar_simulado.index') }}">
+                <!-- Áreas do Conhecimento -->
+                <div class="mb-4">
+                    <h4 class="mb-3">Áreas do Conhecimento</h4>
+                    <p class="text-muted small mb-3">Selecione uma ou mais áreas para seu simulado</p>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="areas" id="area-linguagens" value="Linguagens">
+                                <label class="form-check-label" for="area-linguagens">
+                                    Linguagens
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="areas" id="area-matematica" value="Matemática">
+                                <label class="form-check-label" for="area-matematica">
+                                    Matemática
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="areas" id="area-humanas" value="Humanas">
+                                <label class="form-check-label" for="area-humanas">
+                                    Humanas
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="areas" id="area-natureza" value="Natureza">
+                                <label class="form-check-label" for="area-natureza">
+                                    Natureza
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quantidade de Questões -->
+                <div class="mb-4">
+                    <h4 class="mb-3">Quantidade de Questões</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="num_questoes">Número de questões:</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="num_questoes" name="num_questoes">
+                                    <option value="10">10 questões</option>
+                                    <option value="20">20 questões</option>
+                                    <option value="30">30 questões</option>
+                                    <option value="45" selected>45 questões</option>
+                                    <option value="90">90 questões (simulado completo)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-text mt-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Selecione a quantidade de questões de acordo com seu tempo disponível.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Duração do Simulado -->
+                <div class="mb-4">
+                    <h4 class="mb-3">Duração do Simulado</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="duracao">Tempo disponível:</label>
+                                <select class="form-select bg-dark text-light border-secondary" id="duracao" name="duracao">
+                                    <option value="30">30 minutos</option>
+                                    <option value="60">1 hora</option>
+                                    <option value="120" selected>2 horas</option>
+                                    <option value="180">3 horas</option>
+                                    <option value="240">4 horas</option>
+                                    <option value="300">5 horas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-text mt-4">
+                                <i class="bi bi-stopwatch me-2"></i>
+                                O tempo médio por questão no ENEM é de aproximadamente 3 minutos.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Agendamento (Opcional) -->
+                <div class="mb-4">
+                    <h4 class="mb-3">Agendamento (Opcional)</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="data_agendada">Data e hora:</label>
+                                <input type="datetime-local" class="form-control bg-dark text-light border-secondary" 
+                                       id="data_agendada" name="data_agendada">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-text mt-4">
+                                <i class="bi bi-calendar-event me-2"></i>
+                                Você receberá uma notificação quando chegar o horário agendado.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botões de Ação -->
+                <div class="d-flex justify-content-between mt-5">
+                    <a href="{{ url_for('simulados.index') }}" class="btn btn-outline-light">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Agendar Simulado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Dicas -->
+    <div class="card bg-dark">
+        <div class="card-header">
+            <h5 class="mb-0">Dicas para um Simulado Eficiente</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-lightning-charge fs-3 text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Planeje seu Tempo</h6>
+                            <p class="small text-muted mb-0">Divida o tempo total pelo número de questões para não ficar preso em uma única questão.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-skip-forward fs-3 text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Pule Questões Difíceis</h6>
+                            <p class="small text-muted mb-0">Se uma questão estiver muito difícil, pule e volte depois. Priorize pontos mais fáceis.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-shield-check fs-3 text-primary"></i>
+                        </div>
+                        <div>
+                            <h6>Ambiente Adequado</h6>
+                            <p class="small text-muted mb-0">Escolha um local tranquilo e sem distrações, simulando o ambiente real da prova.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sincronizar número de questões com duração
+        const numQuestoesSelect = document.getElementById('num_questoes');
+        const duracaoSelect = document.getElementById('duracao');
+        
+        numQuestoesSelect.addEventListener('change', function() {
+            const numQuestoes = parseInt(this.value);
+            
+            // Calcular tempo adequado (3 min por questão)
+            const tempoRecomendado = Math.ceil(numQuestoes * 3 / 60) * 60;
+            
+            // Buscar opção mais próxima no select de duração
+            const opcoes = Array.from(duracaoSelect.options).map(opt => parseInt(opt.value));
+            const opcaoMaisProxima = opcoes.reduce((prev, curr) => 
+                Math.abs(curr - tempoRecomendado) < Math.abs(prev - tempoRecomendado) ? curr : prev
+            );
+            
+            duracaoSelect.value = opcaoMaisProxima;
+        });
+        
+        // Definir data mínima para agendamento (data atual)
+        const dataAgendadaInput = document.getElementById('data_agendada');
+        const agora = new Date();
+        
+        // Formatar para YYYY-MM-DDThh:mm
+        const ano = agora.getFullYear();
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const hora = String(agora.getHours()).padStart(2, '0');
+        const minuto = String(agora.getMinutes()).padStart(2, '0');
+        
+        const dataMinima = `${ano}-${mes}-${dia}T${hora}:${minuto}`;
+        dataAgendadaInput.min = dataMinima;
+        
+        // Verificar se pelo menos uma área está selecionada
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            const areasChecked = document.querySelectorAll('input[name="areas"]:checked');
+            
+            if (areasChecked.length === 0) {
+                event.preventDefault();
+                alert('Selecione pelo menos uma área de conhecimento');
+            }
+        });
+    });
+</script>
+{% endblock %}

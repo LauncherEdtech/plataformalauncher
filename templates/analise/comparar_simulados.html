@@ -1,0 +1,303 @@
+{% extends "layout.html" %}
+
+{% block title %}Comparação de Simulados - Plataforma Launcher{% endblock %}
+
+{% block styles %}
+
+<style> .chart-container { height: 300px; } .comparison-card { border-radius: 10px; overflow: hidden; transition: transform 0.3s; } .comparison-card:hover { transform: translateY(-5px); } .comparison-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem; margin-bottom: 1rem; } .evolution-indicator { font-size: 1.5rem; padding: 0.5rem; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; } .evolution-positive { background-color: rgba(40, 167, 69, 0.2); color: #28a745; } .evolution-negative { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; } .evolution-neutral { background-color: rgba(108, 117, 125, 0.2); color: #6c757d; } .comparison-stats { display: flex; align-items: center; } .comparison-arrow { font-size: 1.5rem; margin: 0 1rem; } </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="comparacao-simulados"> <div class="d-flex justify-content-between align-items-center mb-4"> <h1>Comparação de Simulados</h1> <div> <a href="{{ url_for('analise.index') }}" class="btn btn-outline-light"> <i class="bi bi-arrow-left"></i> Voltar para Análises </a> </div> </div>
+<!-- Formulário de Seleção -->
+<div class="card bg-dark mb-5">
+    <div class="card-header">
+        <h4 class="mb-0">Selecione os Simulados para Comparar</h4>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('analise.comparar_simulados') }}" method="GET" class="row g-3">
+            <div class="col-md-5">
+                <label for="simulado1" class="form-label">Simulado Anterior</label>
+                <select name="simulado1" id="simulado1" class="form-select bg-dark text-light border-secondary">
+                    {% for sim in simulados %}
+                        <option value="{{ sim.id }}" {{ 'selected' if sim.id == simulado1.id else '' }}>
+                            {{ sim.titulo }} ({{ sim.data_realizado.strftime('%d/%m/%Y') }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label for="simulado2" class="form-label">Simulado Posterior</label>
+                <select name="simulado2" id="simulado2" class="form-select bg-dark text-light border-secondary">
+                    {% for sim in simulados %}
+                        <option value="{{ sim.id }}" {{ 'selected' if sim.id == simulado2.id else '' }}>
+                            {{ sim.titulo }} ({{ sim.data_realizado.strftime('%d/%m/%Y') }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Comparar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumo da Comparação -->
+<div class="row mb-5">
+    <div class="col-md-6">
+        <div class="card bg-dark comparison-card">
+            <div class="card-header bg-primary bg-opacity-25">
+                <h5 class="mb-0">{{ simulado1.titulo }}</h5>
+                <small class="text-muted">{{ simulado1.data_realizado.strftime('%d/%m/%Y') }}</small>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h2 class="display-4">{{ simulado1.nota_tri|int }}</h2>
+                    <p class="text-muted">Nota TRI</p>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h5 mb-1">{{ simulado1.acertos_total }}</div>
+                        <div class="text-muted small">Acertos</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-1">{{ simulado1.questoes.count() }}</div>
+                        <div class="text-muted small">Questões</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-1">{{ simulado1.tempo_realizado }}</div>
+                        <div class="text-muted small">Tempo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-dark comparison-card">
+            <div class="card-header bg-success bg-opacity-25">
+                <h5 class="mb-0">{{ simulado2.titulo }}</h5>
+                <small class="text-muted">{{ simulado2.data_realizado.strftime('%d/%m/%Y') }}</small>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h2 class="display-4">{{ simulado2.nota_tri|int }}</h2>
+                    <p class="text-muted">Nota TRI</p>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h5 mb-1">{{ simulado2.acertos_total }}</div>
+                        <div class="text-muted small">Acertos</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-1">{{ simulado2.questoes.count() }}</div>
+                        <div class="text-muted small">Questões</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h5 mb-1">{{ simulado2.tempo_realizado }}</div>
+                        <div class="text-muted small">Tempo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evolução Geral -->
+<h2 class="mb-4">Evolução Geral</h2>
+<div class="card bg-dark mb-5">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark h-100">
+                    <div class="card-body text-center">
+                        {% set diff_nota = simulado2.nota_tri - simulado1.nota_tri %}
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="evolution-indicator 
+                                        {{ 'evolution-positive' if diff_nota > 0 else ('evolution-negative' if diff_nota < 0 else 'evolution-neutral') }}">
+                                {% if diff_nota > 0 %}
+                                    <i class="bi bi-arrow-up"></i>
+                                {% elif diff_nota < 0 %}
+                                    <i class="bi bi-arrow-down"></i>
+                                {% else %}
+                                    <i class="bi bi-dash"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h5 class="mb-2">Nota TRI</h5>
+                        <div class="comparison-stats d-flex justify-content-center">
+                            <div>{{ simulado1.nota_tri|int }}</div>
+                            <div class="comparison-arrow">→</div>
+                            <div>{{ simulado2.nota_tri|int }}</div>
+                        </div>
+                        <div class="{{ 'text-success' if diff_nota > 0 else ('text-danger' if diff_nota < 0 else 'text-muted') }}">
+                            {% if diff_nota > 0 %}
+                                +{{ diff_nota|round|int }} pontos
+                            {% elif diff_nota < 0 %}
+                                {{ diff_nota|round|int }} pontos
+                            {% else %}
+                                Sem alteração
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark h-100">
+                    <div class="card-body text-center">
+                        {% set percentual1 = (simulado1.acertos_total / simulado1.questoes.count() * 100)|round|int if simulado1.questoes.count() > 0 else 0 %}
+                        {% set percentual2 = (simulado2.acertos_total / simulado2.questoes.count() * 100)|round|int if simulado2.questoes.count() > 0 else 0 %}
+                        {% set diff_percentual = percentual2 - percentual1 %}
+                        
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="evolution-indicator 
+                                        {{ 'evolution-positive' if diff_percentual > 0 else ('evolution-negative' if diff_percentual < 0 else 'evolution-neutral') }}">
+                                {% if diff_percentual > 0 %}
+                                    <i class="bi bi-arrow-up"></i>
+                                {% elif diff_percentual < 0 %}
+                                    <i class="bi bi-arrow-down"></i>
+                                {% else %}
+                                    <i class="bi bi-dash"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h5 class="mb-2">Percentual de Acertos</h5>
+                        <div class="comparison-stats d-flex justify-content-center">
+                            <div>{{ percentual1 }}%</div>
+                            <div class="comparison-arrow">→</div>
+                            <div>{{ percentual2 }}%</div>
+                        </div>
+                        <div class="{{ 'text-success' if diff_percentual > 0 else ('text-danger' if diff_percentual < 0 else 'text-muted') }}">
+                            {% if diff_percentual > 0 %}
+                                +{{ diff_percentual }}%
+                            {% elif diff_percentual < 0 %}
+                                {{ diff_percentual }}%
+                            {% else %}
+                                Sem alteração
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark h-100">
+                    <div class="card-body text-center">
+                        {% set tempo1 = simulado1.tempo_realizado.split('h') %}
+                        {% set tempo1_min = tempo1[0]|int * 60 + tempo1[1]|int %}
+                        
+                        {% set tempo2 = simulado2.tempo_realizado.split('h') %}
+                        {% set tempo2_min = tempo2[0]|int * 60 + tempo2[1]|int %}
+                        
+                        {% set diff_tempo = tempo2_min - tempo1_min %}
+                        {% set diff_tempo_h = (diff_tempo // 60) %}
+                        {% set diff_tempo_m = (diff_tempo % 60) %}
+                        
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="evolution-indicator 
+                                        {{ 'evolution-negative' if diff_tempo > 20 else ('evolution-positive' if diff_tempo < -20 else 'evolution-neutral') }}">
+                                {% if diff_tempo > 20 %}
+                                    <i class="bi bi-arrow-up"></i>
+                                {% elif diff_tempo < -20 %}
+                                    <i class="bi bi-arrow-down"></i>
+                                {% else %}
+                                    <i class="bi bi-dash"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h5 class="mb-2">Tempo Total</h5>
+                        <div class="comparison-stats d-flex justify-content-center">
+                            <div>{{ simulado1.tempo_realizado }}</div>
+                            <div class="comparison-arrow">→</div>
+                            <div>{{ simulado2.tempo_realizado }}</div>
+                        </div>
+                        <div class="{{ 'text-danger' if diff_tempo > 20 else ('text-success' if diff_tempo < -20 else 'text-muted') }}">
+                            {% if diff_tempo == 0 %}
+                                Sem alteração
+                            {% elif diff_tempo > 0 %}
+                                +{{ diff_tempo_h }}h{{ diff_tempo_m }}min
+                            {% else %}
+                                -{{ -diff_tempo_h }}h{{ -diff_tempo_m }}min
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparação por Área -->
+<h2 class="mb-4">Comparação por Área</h2>
+<div class="row mb-5">
+    <div class="col-md-8">
+        <div class="card bg-dark h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Desempenho por Área</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartComparacao"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-dark h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Análise de Evolução</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush bg-dark">
+                    {% for area, dados in evolucao.items() %}
+                        <div class="list-group-item bg-dark border-secondary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-secondary me-2">{{ area }}</span>
+                                </div>
+                                {% if dados.status == 'melhorou' %}
+                                    <span class="badge bg-success">+{{ dados.diff|round|int }}%</span>
+                                {% elif dados.status == 'piorou' %}
+                                    <span class="badge bg-danger">{{ dados.diff|round|int }}%</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Sem alteração</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer bg-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Maior melhoria:</span>
+                    {% set melhor_area = evolucao|dictsort(by='value', reverse=true)|first %}
+                    {% if melhor_area[1].diff > 0 %}
+                        <span class="badge bg-success">{{ melhor_area[0] }} (+{{ melhor_area[1].diff|round|int }}%)</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Nenhuma</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações -->
+<div class="d-flex justify-content-center mb-5">
+    <a href="{{ url_for('simulados.index') }}" class="btn btn-primary me-3">
+        <i class="bi bi-journals"></i> Fazer Novo Simulado
+    </a>
+    <a href="{{ url_for('analise.exportar_pdf', simulado_id=simulado2.id) }}" class="btn btn-outline-danger">
+        <i class="bi bi-file-earmark-pdf"></i> Exportar Relatório
+    </a>
+</div>
+</div> {% endblock %}
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script> document.addEventListener('DOMContentLoaded', function() { // Dados para os gráficos const areas = {{ areas_lista|safe }}; const percentuais1 = {{ percentuais1|safe }}; const percentuais2 = {{ percentuais2|safe }}; // Gráfico de comparação por área const ctxComparacao = document.getElementById('chartComparacao').getContext('2d'); new Chart(ctxComparacao, { type: 'radar', data: { labels: areas, datasets: [ { label: '{{ simulado1.titulo }}', data: percentuais1, backgroundColor: 'rgba(0, 123, 255, 0.2)', borderColor: 'rgba(0, 123, 255, 1)', borderWidth: 2, pointBackgroundColor: 'rgba(0, 123, 255, 1)', pointBorderColor: '#fff', pointRadius: 5 }, { label: '{{ simulado2.titulo }}', data: percentuais2, backgroundColor: 'rgba(40, 167, 69, 0.2)', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 2, pointBackgroundColor: 'rgba(40, 167, 69, 1)', pointBorderColor: '#fff', pointRadius: 5 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: 'rgba(255, 255, 255, 0.7)' }, ticks: { color: 'rgba(255, 255, 255, 0.7)', backdropColor: 'transparent' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { labels: { color: 'rgba(255, 255, 255, 0.7)' } } } } }); }); </script>
+{% endblock %}
+

@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}Simulados - Análise de Desempenho - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="analise-simulados">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Análise de Simulados</h1>
+        <a href="{{ url_for('analise.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para Análise
+        </a>
+    </div>
+    
+    <p class="lead mb-5">Visualize todos seus simulados realizados e acesse análises detalhadas de seu desempenho.</p>
+    
+    {% if simulados %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Simulado</th>
+                        <th>Data de Realização</th>
+                        <th>Tempo</th>
+                        <th>Nota TRI</th>
+                        <th>Áreas</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for simulado in simulados %}
+                    <tr>
+                        <td>{{ simulado.titulo }}</td>
+                        <td>{{ simulado.data_realizado.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ simulado.tempo_realizado }}</td>
+                        <td>
+                            <span class="badge bg-primary rounded-pill px-3 py-2">{{ simulado.nota_tri|int }}</span>
+                        </td>
+                        <td>{{ simulado.areas }}</td>
+                        <td>
+                            <a href="{{ url_for('analise.desempenho_detalhado', simulado_id=simulado.id) }}" class="btn btn-sm btn-info">
+                                <i class="bi bi-bar-chart-fill"></i> Análise Detalhada
+                            </a>
+                            <a href="{{ url_for('simulados.resultado', simulado_id=simulado.id) }}" class="btn btn-sm btn-outline-light">
+                                <i class="bi bi-eye"></i> Ver Gabarito
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card bg-dark">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-clipboard-x fs-1 mb-3 text-muted"></i>
+                <h4 class="mb-3">Nenhum simulado concluído</h4>
+                <p class="mb-4">Você ainda não completou nenhum simulado. Complete um simulado para ver análises detalhadas.</p>
+                <a href="{{ url_for('simulados.index') }}" class="btn btn-primary">
+                    Ir para Simulados
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="mt-5">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0">Dicas para Melhorar seu Desempenho</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-alarm fs-3 text-primary"></i>
+                            </div>
+                            <div>
+                                <h6>Pratique Gerenciamento de Tempo</h6>
+                                <p class="small text-muted">Calcule aproximadamente 3 minutos por questão e pratique manter esse ritmo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-bullseye fs-3 text-primary"></i>
+                            </div>
+                            <div>
+                                <h6>Foque nas Suas Fraquezas</h6>
+                                <p class="small text-muted">Identifique suas áreas mais fracas e gaste mais tempo estudando-as.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="bi bi-graph-up-arrow fs-3 text-primary"></i>
+                            </div>
+                            <div>
+                                <h6>Acompanhe Seu Progresso</h6>
+                                <p class="small text-muted">Faça simulados regularmente e monitore sua evolução ao longo do tempo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

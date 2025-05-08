@@ -1,0 +1,125 @@
+<!-- app/templates/helpzone/nova_duvida.html -->
+<!-- Autor: Desenvolvimento Plataforma Launcher -->
+
+{% extends "layout.html" %}
+
+{% block title %}Nova Dúvida - Help Zone - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #800000;
+        --secondary-color: #500000;
+        --text-color: #ffffff;
+        --card-bg: rgba(30, 30, 30, 0.8);
+        --tag-bg: #800000;
+        --hover-color: #a00000;
+    }
+    
+    body {
+        background: linear-gradient(180deg,
+            #800000 0%,
+            #000000 40%,
+            #000000 75%,
+            #000000 100%);
+        color: var(--text-color);
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .nova-duvida {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--hover-color) !important;
+        border-color: var(--hover-color) !important;
+    }
+    
+    .btn-outline-light:hover {
+        background-color: var(--hover-color) !important;
+        border-color: var(--hover-color) !important;
+    }
+    
+    .card {
+        background-color: var(--card-bg) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        margin-bottom: 1rem;
+    }
+    
+    .form-control, .form-select {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        color: var(--text-color) !important;
+        border: 1px solid #333 !important;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background-color: rgba(0, 0, 0, 0.7) !important;
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 0.25rem rgba(128, 0, 0, 0.25) !important;
+    }
+    
+    .form-text {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    h1 {
+        font-size: 2rem;
+        font-weight: 600;
+    }
+</style>
+
+<div class="nova-duvida">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Nova Dúvida</h1>
+        <a href="{{ url_for('helpzone.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para o Help Zone
+        </a>
+    </div>
+    
+    <div class="card bg-dark">
+        <div class="card-body">
+            <form action="{{ url_for('helpzone.nova_duvida') }}" method="POST">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título da sua dúvida</label>
+                    <input type="text" name="titulo" id="titulo" class="form-control bg-dark text-light border-secondary"
+                           placeholder="Ex: Como resolver equações do segundo grau?" required>
+                    <div class="form-text">Seja claro e específico para aumentar suas chances de resposta.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="area" class="form-label">Área do conhecimento</label>
+                    <select name="area" id="area" class="form-select bg-dark text-light border-secondary" required>
+                        <option value="" selected disabled>Selecione uma área</option>
+                        {% for area in areas_disponiveis %}
+                            <option value="{{ area }}">{{ area|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="conteudo" class="form-label">Detalhes da sua dúvida</label>
+                    <textarea name="conteudo" id="conteudo" class="form-control bg-dark text-light border-secondary" 
+                              rows="10" placeholder="Explique sua dúvida com detalhes..." required></textarea>
+                    <div class="form-text">
+                        Explique em detalhes o que você já tentou, onde está tendo dificuldade, etc.
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Publicar Dúvida</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

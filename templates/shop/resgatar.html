@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}Resgatar {{ produto.nome }} - Shop - Plataforma Launcher{% endblock %}
+
+{% block content %}
+<div class="resgate">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Resgatar Produto</h1>
+        <a href="{{ url_for('shop.index') }}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Voltar para a Loja
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card bg-dark mb-4">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <img src="{{ url_for('static', filename='images/produtos/' ~ produto.imagem) }}" 
+                             class="img-fluid rounded" alt="{{ produto.nome }}" style="max-height: 300px;">
+                    </div>
+                    <h4 class="card-title">{{ produto.nome }}</h4>
+                    <p class="card-text">{{ produto.descricao }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="xp-badge d-flex align-items-center bg-warning text-dark rounded-pill px-3 py-2">
+                            <img src="{{ url_for('static', filename='images/icons/xp-icon.svg') }}" alt="XP" class="me-2" width="20">
+                            <span class="fw-bold">{{ produto.preco_xp }} XP</span>
+                        </div>
+                        <div>
+                            <span class="badge bg-success">Em estoque: {{ produto.estoque }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card bg-dark">
+                <div class="card-header">
+                    <h5 class="mb-0">Seu Saldo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Saldo atual:</span>
+                        <span class="fw-bold">{{ current_user.xp_total }} XP</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Custo do produto:</span>
+                        <span class="fw-bold text-danger">- {{ produto.preco_xp }} XP</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Saldo após o resgate:</span>
+                        <span class="fw-bold">{{ current_user.xp_total - produto.preco_xp }} XP</span>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Saldo após o resgate:</span>
+                            <span class="fw-bold">{{ current_user.xp_total - produto.preco_xp }} XP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card bg-dark">
+                    <div class="card-header">
+                        <h5 class="mb-0">Informações de Entrega</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ url_for('shop.resgatar', produto_id=produto.id) }}" method="POST">
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome completo</label>
+                                <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                       id="nome" name="nome" value="{{ current_user.nome_completo }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-mail para contato</label>
+                                <input type="email" class="form-control bg-dark text-light border-secondary" 
+                                       id="email" name="email" value="{{ current_user.email }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="telefone" class="form-label">Telefone para contato</label>
+                                <input type="tel" class="form-control bg-dark text-light border-secondary" 
+                                       id="telefone" name="telefone" placeholder="(00) 00000-0000" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="endereco" class="form-label">Endereço completo para entrega</label>
+                                <textarea class="form-control bg-dark text-light border-secondary" 
+                                          id="endereco" name="endereco" rows="5" 
+                                          placeholder="Rua, número, complemento, bairro, cidade, estado, CEP" required></textarea>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <div class="d-flex">
+                                    <div class="me-3">
+                                        <i class="bi bi-info-circle-fill fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <p class="mb-0">
+                                            Ao clicar em "Confirmar Resgate", você está confirmando o desconto de 
+                                            <strong>{{ produto.preco_xp }} XP</strong> do seu saldo. Esta ação não poderá ser desfeita.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">Confirmar Resgate</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
